@@ -42,13 +42,13 @@ pdf-merger --cli-only --input ./my-pdfs --output ./merged.pdf
 
 ### Option 2: Download Pre-built Binaries
 
-Download the latest release for your operating system from the [releases page](https://github.com/yourusername/pdf-merger/releases).
+Download the latest release for your operating system from the [releases page](https://github.com/Nattie-Nkosi/pdf-merger/releases).
 
 ### Option 3: Build from Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/pdf-merger.git
+git clone https://github.com/Nattie-Nkosi/pdf-merger.git
 cd pdf-merger
 
 # Install dependencies
