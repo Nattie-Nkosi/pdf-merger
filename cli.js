@@ -2,9 +2,10 @@
 
 const path = require("path");
 const { execSync } = require("child_process");
+const fs = require("fs");
 
-// Check if electron is being run with app or in development
-const isPackaged = process.env.NODE_ENV === "production";
+// Determine the actual directory where the application is installed
+const appDirectory = __dirname;
 
 if (isPackaged) {
   // When installed globally, the app will already be packaged into an executable
@@ -95,37 +96,52 @@ Options:
       // First check if electron is installed
       let electron;
       try {
+        // Try to require electron directly
         electron = require("electron");
       } catch (error) {
-        console.error(
-          "\x1b[31m%s\x1b[0m",
-          "Error: Electron not found. This is likely because the package was installed without dependencies."
-        );
-        console.log(
-          "\x1b[33m%s\x1b[0m",
-          "Please install the application with dependencies using:"
-        );
-        console.log(
-          "\x1b[36m%s\x1b[0m",
-          "npm install -g pdf-merger-tool --include=dev"
-        );
-        console.log("\x1b[33m%s\x1b[0m", "Or reinstall with:");
-        console.log(
-          "\x1b[36m%s\x1b[0m",
-          "npm install -g pdf-merger-tool@latest"
-        );
-        console.log(
-          "\x1b[33m%s\x1b[0m",
-          "In the meantime, you can still use the CLI functionality:"
-        );
-        console.log("\x1b[36m%s\x1b[0m", "pdf-merger --help");
-        process.exit(1);
+        // If we're in a development environment or packaged app, electron might be in node_modules
+        try {
+          const electronPath = path.join(
+            appDirectory,
+            "node_modules",
+            "electron"
+          );
+          electron = require(electronPath);
+        } catch (innerError) {
+          // If we still can't find electron, provide guidance
+          console.error(
+            "\x1b[31m%s\x1b[0m",
+            "Error: Electron not found. This is likely because the package was installed without dependencies."
+          );
+          console.log(
+            "\x1b[33m%s\x1b[0m",
+            "To use the GUI, install electron globally:"
+          );
+          console.log("\x1b[36m%s\x1b[0m", "npm install -g electron");
+          console.log("\x1b[33m%s\x1b[0m", "Or use the CLI functionality:");
+          console.log("\x1b[36m%s\x1b[0m", "pdf-merger --cli-only");
+          process.exit(1);
+        }
       }
 
-      const proc = require("child_process").spawn(electron, ["."], {
+      // Make sure we're passing the correct app directory to Electron
+      const appPath = appDirectory;
+      const proc = require("child_process").spawn(electron, [appPath], {
         stdio: "inherit",
+        cwd: appPath, // Set the working directory to the app directory
       });
+
       proc.on("close", (code) => process.exit(code));
+      proc.on("error", (err) => {
+        console.error(
+          "\x1b[31m%s\x1b[0m",
+          "Error launching Electron:",
+          err.message
+        );
+        console.log("\x1b[33m%s\x1b[0m", "You can try running in CLI mode:");
+        console.log("\x1b[36m%s\x1b[0m", "pdf-merger --cli-only");
+        process.exit(1);
+      });
     } catch (err) {
       console.error("\x1b[31m%s\x1b[0m", "Failed to start Electron app:", err);
       process.exit(1);

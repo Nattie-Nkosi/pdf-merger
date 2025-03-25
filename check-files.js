@@ -84,5 +84,18 @@ if (
   );
 }
 
-// All checks passed
+// Check if main.js properly references required files
+try {
+  const mainContent = fs.readFileSync(path.join(__dirname, "main.js"), "utf8");
+
+  // Ensure main.js references local paths correctly
+  if (mainContent.includes("path.join(__dirname") === false) {
+    console.warn(
+      "⚠️ main.js might have incorrect path references. Verify all paths use __dirname."
+    );
+  }
+} catch (error) {
+  console.error("❌ Error checking main.js:", error);
+}
+
 console.log("✅ All pre-publish checks passed!");

@@ -23,23 +23,21 @@ A powerful and user-friendly desktop application for merging multiple PDF files 
 ### Option 1: Install from NPM (Recommended)
 
 ```bash
-# Install globally with all dependencies
+# Install globally
 npm install -g pdf-merger-tool
+
+# Install Electron globally (required for GUI mode)
+npm install -g electron
 
 # Run the application
 pdf-merger
 ```
 
-If you encounter any errors related to missing dependencies, try reinstalling with:
+If you prefer to only use the command-line interface (no GUI required):
 
 ```bash
-npm install -g pdf-merger-tool@latest
-```
-
-You can always use the command-line interface even if the GUI installation has issues:
-
-```bash
-pdf-merger --input ./my-pdfs --output ./merged.pdf
+# Run in CLI-only mode (no Electron required)
+pdf-merger --cli-only --input ./my-pdfs --output ./merged.pdf
 ```
 
 ### Option 2: Download Pre-built Binaries
@@ -179,15 +177,15 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 #### "Cannot find module 'electron'"
 
-If you see this error when trying to run the GUI application, it means Electron wasn't installed correctly with the global package.
+If you see this error when trying to run the GUI application, it means Electron isn't installed globally.
 
 **Solution:**
 
 ```bash
-# Reinstall with latest version
-npm install -g pdf-merger-tool@latest
+# Install Electron globally
+npm install -g electron
 
-# Or use CLI mode only
+# Or use CLI mode only (no Electron required)
 pdf-merger --cli-only
 ```
 

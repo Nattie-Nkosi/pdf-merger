@@ -3,6 +3,9 @@ const path = require("path");
 const fs = require("fs").promises;
 const { mergePDFs } = require("./index");
 
+// Make sure we're working in the correct directory
+process.chdir(__dirname);
+
 // Keep a global reference of the window object to prevent it from being garbage collected
 let mainWindow;
 
@@ -20,7 +23,7 @@ function createWindow() {
   });
 
   // Load the index.html file
-  mainWindow.loadFile("index.html");
+  mainWindow.loadFile(path.join(__dirname, "index.html"));
 
   // Open DevTools in development
   // mainWindow.webContents.openDevTools();
