@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF Merger</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>PDF Merger</h1>
+        <p>Combine multiple PDF files into a single document</p>
+      </header>
+
+      <main>
+        <div class="input-section">
+          <div class="input-group">
+            <label for="input-directory">Input Directory:</label>
+            <div class="input-with-button">
+              <input
+                type="text"
+                id="input-directory"
+                readonly
+                placeholder="Select a folder containing PDF files"
+              />
+              <button id="browse-input" class="btn">Browse</button>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="output-file">Output PDF:</label>
+            <div class="input-with-button">
+              <input
+                type="text"
+                id="output-file"
+                readonly
+                placeholder="Select where to save the merged PDF"
+              />
+              <button id="browse-output" class="btn">Browse</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="options-section">
+          <h2>Options</h2>
+          <div class="options-grid">
+            <div class="option-group">
+              <label for="sort-by">Sort files by:</label>
+              <select id="sort-by">
+                <option value="name">Name</option>
+                <option value="date">Date modified</option>
+                <option value="size">File size</option>
+                <option value="custom">Custom order</option>
+              </select>
+            </div>
+
+            <div class="option-group">
+              <label>Sort direction:</label>
+              <div class="radio-group">
+                <label>
+                  <input
+                    type="radio"
+                    name="sort-direction"
+                    value="ascending"
+                    checked
+                  />
+                  Ascending
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="sort-direction"
+                    value="descending"
+                  />
+                  Descending
+                </label>
+              </div>
+            </div>
+
+            <div class="option-group">
+              <label for="file-pattern">File pattern (regex):</label>
+              <input
+                type="text"
+                id="file-pattern"
+                placeholder="e.g. ^chapter.*"
+              />
+            </div>
+
+            <div class="option-group checkbox-group">
+              <label>
+                <input type="checkbox" id="add-bookmarks" checked />
+                Add bookmarks
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="files-section" id="files-section" style="display: none">
+          <h2>PDF Files to Merge</h2>
+          <p class="drag-instructions">Drag and drop to reorder files</p>
+          <ul id="file-list" class="file-list"></ul>
+        </div>
+
+        <div class="actions-section">
+          <button id="merge-button" class="btn primary" disabled>
+            Merge PDFs
+          </button>
+        </div>
+
+        <div
+          class="progress-section"
+          id="progress-section"
+          style="display: none"
+        >
+          <h3>Merging PDFs...</h3>
+          <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+          <p id="progress-text">Preparing to merge...</p>
+        </div>
+
+        <div class="result-section" id="result-section" style="display: none">
+          <div id="success-message" class="success-message">
+            <h3>PDF Successfully Merged!</h3>
+            <p id="result-details"></p>
+            <div class="result-actions">
+              <button id="open-pdf-button" class="btn">Open PDF</button>
+              <button id="new-merge-button" class="btn">Start New Merge</button>
+            </div>
+          </div>
+          <div id="error-message" class="error-message">
+            <h3>Error During Merge</h3>
+            <p id="error-details"></p>
+            <button id="try-again-button" class="btn">Try Again</button>
+          </div>
+        </div>
+      </main>
+
+      <footer>
+        <p>PDF Merger Application</p>
+      </footer>
+    </div>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>

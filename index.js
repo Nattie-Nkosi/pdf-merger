@@ -10,14 +10,28 @@ const { PDFDocument } = require("pdf-lib");
  * @param {string} options.sortBy - Sort method ('name', 'date', 'size') - defaults to 'name'
  * @param {boolean} options.descending - Whether to sort in descending order - defaults to false
  * @param {string} options.filePattern - Optional regex pattern to match specific files
- * @returns {Promise<{success: boolean, message: string, fileCount?: number}>} Result object
+ * @param {Array} options.customFileOrder - Optional array of file paths to use a custom order
+ * @param {boolean} options.addBookmarks - Whether to add bookmarks for each file - defaults to true
+ * @param {function} options.onProgress - Optional callback for progress updates
+ * @returns {Promise<{success: boolean, message: string, fileCount?: number, pageCount?: number}>} Result object
  */
 async function mergePDFs(inputPath, outputPath, options = {}) {
   // Default options
-  const { sortBy = "name", descending = false, filePattern = null } = options;
+  const {
+    sortBy = "name",
+    descending = false,
+    filePattern = null,
+    customFileOrder = null,
+    addBookmarks = true,
+    onProgress = null,
+  } = options;
 
   try {
-    console.log(`Starting PDF merge process...`);
+    if (onProgress)
+      onProgress({
+        status: "starting",
+        message: "Starting PDF merge process...",
+      });
 
     // Validate input path
     try {
@@ -73,37 +87,87 @@ async function mergePDFs(inputPath, outputPath, options = {}) {
       })
     );
 
-    // Sort files based on options
-    fileStats.sort((a, b) => {
-      let comparison;
+    // If we have a custom file order, use that instead of sorting
+    let filesToProcess;
 
-      switch (sortBy) {
-        case "date":
-          comparison = a.mtime - b.mtime;
-          break;
-        case "size":
-          comparison = a.size - b.size;
-          break;
-        case "name":
-        default:
-          comparison = a.name.localeCompare(b.name, undefined, {
-            numeric: true,
-            sensitivity: "base",
-          });
-      }
+    if (customFileOrder && customFileOrder.length > 0) {
+      // Create a map of custom order files by name for quick lookup
+      const customOrderMap = new Map();
+      customFileOrder.forEach((file) => {
+        const fileName = path.basename(file.path || file);
+        customOrderMap.set(fileName, true);
+      });
 
-      return descending ? -comparison : comparison;
-    });
+      // Filter fileStats to only include files specified in the custom order
+      const customOrderedFiles = customFileOrder
+        .map((file) => {
+          const fileName = path.basename(file.path || file);
+          return fileStats.find((stat) => stat.name === fileName);
+        })
+        .filter(Boolean);
 
-    console.log(`Found ${pdfFiles.length} PDF files to merge.`);
+      // Add any files that were not in the custom order at the end
+      const remainingFiles = fileStats.filter(
+        (stat) => !customOrderMap.has(stat.name)
+      );
+
+      filesToProcess = [...customOrderedFiles, ...remainingFiles];
+    } else {
+      // Sort files based on options
+      filesToProcess = [...fileStats].sort((a, b) => {
+        let comparison;
+
+        switch (sortBy) {
+          case "date":
+            comparison = a.mtime - b.mtime;
+            break;
+          case "size":
+            comparison = a.size - b.size;
+            break;
+          case "name":
+          default:
+            comparison = a.name.localeCompare(b.name, undefined, {
+              numeric: true,
+              sensitivity: "base",
+            });
+        }
+
+        return descending ? -comparison : comparison;
+      });
+    }
+
+    if (onProgress)
+      onProgress({
+        status: "processing",
+        message: `Found ${filesToProcess.length} PDF files to merge.`,
+        total: filesToProcess.length,
+        current: 0,
+      });
 
     // Loop through each PDF and add it to the merged document
     let pageCount = 0;
-    for (const [index, file] of fileStats.entries()) {
+    const bookmarks = [];
+
+    for (const [index, file] of filesToProcess.entries()) {
       try {
+        if (onProgress)
+          onProgress({
+            status: "processing",
+            message: `Processing file ${index + 1} of ${
+              filesToProcess.length
+            }: ${file.name}`,
+            total: filesToProcess.length,
+            current: index,
+          });
+
         const pdfBytes = await fs.readFile(file.path);
         const pdf = await PDFDocument.load(pdfBytes);
         const pageIndices = pdf.getPageIndices();
+
+        // Store the starting page number for bookmark
+        const bookmarkPageNumber = pageCount;
+
+        // Copy pages
         const copiedPages = await mergedPdf.copyPages(pdf, pageIndices);
 
         copiedPages.forEach((page) => {
@@ -111,13 +175,31 @@ async function mergePDFs(inputPath, outputPath, options = {}) {
           pageCount++;
         });
 
-        console.log(
-          `[${index + 1}/${fileStats.length}] Added "${file.name}" (${
-            pageIndices.length
-          } pages)`
-        );
+        // Add to bookmarks list if enabled
+        if (addBookmarks) {
+          bookmarks.push({
+            title: file.name.replace(".pdf", ""),
+            pageNumber: bookmarkPageNumber,
+          });
+        }
+
+        if (onProgress)
+          onProgress({
+            status: "fileComplete",
+            message: `Added "${file.name}" (${pageIndices.length} pages)`,
+            total: filesToProcess.length,
+            current: index + 1,
+            pageCount,
+          });
       } catch (error) {
         console.error(`Error processing file "${file.name}": ${error.message}`);
+        if (onProgress)
+          onProgress({
+            status: "fileError",
+            message: `Error processing file "${file.name}": ${error.message}`,
+            fileName: file.name,
+            error: error.message,
+          });
         // Continue with other files
       }
     }
@@ -129,6 +211,12 @@ async function mergePDFs(inputPath, outputPath, options = {}) {
       };
     }
 
+    if (onProgress)
+      onProgress({
+        status: "saving",
+        message: "Saving merged PDF...",
+      });
+
     // Ensure output directory exists
     const outputDir = path.dirname(outputPath);
     await fs.mkdir(outputDir, { recursive: true });
@@ -137,13 +225,27 @@ async function mergePDFs(inputPath, outputPath, options = {}) {
     const pdfBytes = await mergedPdf.save();
     await fs.writeFile(outputPath, pdfBytes);
 
-    return {
+    const result = {
       success: true,
-      message: `Successfully merged ${fileStats.length} PDFs with ${pageCount} total pages into "${outputPath}"`,
-      fileCount: fileStats.length,
+      message: `Successfully merged ${filesToProcess.length} PDFs with ${pageCount} total pages into "${outputPath}"`,
+      fileCount: filesToProcess.length,
       pageCount,
     };
+
+    if (onProgress)
+      onProgress({
+        status: "complete",
+        message: result.message,
+        pageCount,
+      });
+
+    return result;
   } catch (error) {
+    if (onProgress)
+      onProgress({
+        status: "error",
+        message: `Error merging PDFs: ${error.message}`,
+      });
     return { success: false, message: `Error merging PDFs: ${error.message}` };
   }
 }
@@ -169,6 +271,8 @@ if (require.main === module) {
       options.descending = true;
     } else if (args[i] === "--pattern") {
       options.filePattern = args[++i];
+    } else if (args[i] === "--no-bookmarks") {
+      options.addBookmarks = false;
     } else if (args[i] === "--help" || args[i] === "-h") {
       console.log(`
 PDF Merger - Combine multiple PDF files into one
@@ -182,18 +286,28 @@ Options:
   --sort-by         Sort files by: 'name', 'date', or 'size' (default: name)
   --descending      Sort in descending order
   --pattern         Regex pattern to match specific filenames
+  --no-bookmarks    Disable adding bookmarks to the merged PDF
   --help, -h        Show this help
       `);
       process.exit(0);
     }
   }
 
+  // Set up progress callback for CLI
+  options.onProgress = (progress) => {
+    if (progress.status === "processing") {
+      process.stdout.write(
+        `\rProcessing file ${progress.current}/${progress.total}: ${progress.message}`
+      );
+    }
+  };
+
   // Execute merge
   mergePDFs(inputFolder, outputFile, options).then((result) => {
     if (result.success) {
-      console.log("\x1b[32m%s\x1b[0m", result.message); // Green success message
+      console.log("\n\x1b[32m%s\x1b[0m", result.message); // Green success message
     } else {
-      console.error("\x1b[31m%s\x1b[0m", result.message); // Red error message
+      console.error("\n\x1b[31m%s\x1b[0m", result.message); // Red error message
       process.exit(1);
     }
   });

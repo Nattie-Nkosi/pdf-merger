@@ -1,0 +1,30 @@
+# Development files
+.git/
+.github/
+.vscode/
+.idea/
+.DS_Store
+*.log
+*.bak
+
+# Build directories
+dist/
+out/
+build/
+
+# Example files
+pdfs-to-merge/
+merged-pdf.pdf
+
+# Tests
+test/
+tests/
+__tests__/
+coverage/
+
+# Temporary files
+tmp/
+temp/
+
+# Project specific
+electron-builder.yml
