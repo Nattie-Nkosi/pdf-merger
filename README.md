@@ -5,7 +5,7 @@
 
 A powerful and user-friendly desktop application for merging multiple PDF files into a single document.
 
-![PDF Merger Screenshot](https://via.placeholder.com/800x450.png?text=PDF+Merger+Tool)
+![PDF Merger Screenshot](./assets/screenshots/pdf-merger-gui.png)
 
 ## Features
 
