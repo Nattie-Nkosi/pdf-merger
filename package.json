@@ -1,6 +1,6 @@
 {
   "name": "pdf-merger-tool",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A desktop application to merge multiple PDF files into one",
   "main": "main.js",
   "bin": {
@@ -25,24 +25,24 @@
     "pdf-tools",
     "document-management"
   ],
-  "author": "Nkosinathi Nkosi <nkosin361@gmail.com>",
-  "homepage": "https://github.com/Nattie-Nkosi/pdf-merger",
+  "author": "Your Name <your.email@example.com>",
+  "homepage": "https://github.com/yourusername/pdf-merger",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Nattie-Nkosi/pdf-merger.git"
+    "url": "git+https://github.com/yourusername/pdf-merger.git"
   },
   "bugs": {
-    "url": "https://github.com/Nattie-Nkosi/pdf-merger/issues"
+    "url": "https://github.com/yourusername/pdf-merger/issues"
   },
   "license": "MIT",
   "engines": {
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "pdf-lib": "^1.17.1"
+    "pdf-lib": "^1.17.1",
+    "electron": "^31.4.0"
   },
   "devDependencies": {
-    "electron": "^31.4.0",
     "electron-builder": "^24.13.3"
   },
   "build": {

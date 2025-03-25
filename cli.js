@@ -24,7 +24,8 @@ if (isPackaged) {
       args.includes("--output") ||
       args.includes("-o") ||
       args.includes("--help") ||
-      args.includes("-h"));
+      args.includes("-h") ||
+      args.includes("--cli-only"));
 
   if (isCLIMode) {
     // Run in CLI mode - just execute index.js with the provided arguments
@@ -63,6 +64,7 @@ Options:
   --descending      Sort in descending order
   --pattern         Regex pattern to match specific filenames
   --no-bookmarks    Disable adding bookmarks to the merged PDF
+  --cli-only        Force CLI mode even without other arguments
   --help, -h        Show this help
         `);
         process.exit(0);
@@ -90,13 +92,42 @@ Options:
   } else {
     // Run in GUI mode - start electron app
     try {
-      const electron = require("electron");
+      // First check if electron is installed
+      let electron;
+      try {
+        electron = require("electron");
+      } catch (error) {
+        console.error(
+          "\x1b[31m%s\x1b[0m",
+          "Error: Electron not found. This is likely because the package was installed without dependencies."
+        );
+        console.log(
+          "\x1b[33m%s\x1b[0m",
+          "Please install the application with dependencies using:"
+        );
+        console.log(
+          "\x1b[36m%s\x1b[0m",
+          "npm install -g pdf-merger-tool --include=dev"
+        );
+        console.log("\x1b[33m%s\x1b[0m", "Or reinstall with:");
+        console.log(
+          "\x1b[36m%s\x1b[0m",
+          "npm install -g pdf-merger-tool@latest"
+        );
+        console.log(
+          "\x1b[33m%s\x1b[0m",
+          "In the meantime, you can still use the CLI functionality:"
+        );
+        console.log("\x1b[36m%s\x1b[0m", "pdf-merger --help");
+        process.exit(1);
+      }
+
       const proc = require("child_process").spawn(electron, ["."], {
         stdio: "inherit",
       });
       proc.on("close", (code) => process.exit(code));
     } catch (err) {
-      console.error("Failed to start Electron app:", err);
+      console.error("\x1b[31m%s\x1b[0m", "Failed to start Electron app:", err);
       process.exit(1);
     }
   }

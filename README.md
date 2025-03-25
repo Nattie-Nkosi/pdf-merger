@@ -23,11 +23,23 @@ A powerful and user-friendly desktop application for merging multiple PDF files 
 ### Option 1: Install from NPM (Recommended)
 
 ```bash
-# Install globally
+# Install globally with all dependencies
 npm install -g pdf-merger-tool
 
 # Run the application
 pdf-merger
+```
+
+If you encounter any errors related to missing dependencies, try reinstalling with:
+
+```bash
+npm install -g pdf-merger-tool@latest
+```
+
+You can always use the command-line interface even if the GUI installation has issues:
+
+```bash
+pdf-merger --input ./my-pdfs --output ./merged.pdf
 ```
 
 ### Option 2: Download Pre-built Binaries
@@ -102,6 +114,7 @@ Options:
   --descending      Sort in descending order
   --pattern         Regex pattern to match specific filenames
   --no-bookmarks    Disable adding bookmarks to the merged PDF
+  --cli-only        Force CLI mode even without other arguments
   --help, -h        Show this help
 ```
 
@@ -159,6 +172,54 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## Troubleshooting
+
+### Common Issues
+
+#### "Cannot find module 'electron'"
+
+If you see this error when trying to run the GUI application, it means Electron wasn't installed correctly with the global package.
+
+**Solution:**
+
+```bash
+# Reinstall with latest version
+npm install -g pdf-merger-tool@latest
+
+# Or use CLI mode only
+pdf-merger --cli-only
+```
+
+#### "Error: Input directory doesn't exist"
+
+This happens when the default input directory (`./pdfs-to-merge`) doesn't exist and no custom directory is specified.
+
+**Solution:**
+
+```bash
+# Create the directory
+mkdir pdfs-to-merge
+
+# Or specify a different directory
+pdf-merger --input ./your-pdf-folder
+```
+
+#### No PDFs Found
+
+If the application says no PDF files were found, check:
+
+1. That your files have `.pdf` extensions
+2. That you have permission to read the files
+3. That your pattern (if specified) isn't filtering out all files
+
+#### Installation Problems on Linux
+
+On Linux systems, you might need to install additional dependencies for Electron:
+
+```bash
+sudo apt-get install libgtk-3-0 libnotify4 libnss3 libxss1 libxtst6 xdg-utils libatspi2.0-0 libdrm2 libgbm1
+```
 
 ## License
 
