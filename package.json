@@ -1,0 +1,17 @@
+{
+  "name": "pfd-merger",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "electron": "^31.4.0",
+    "electron-prompt": "^1.7.0",
+    "pdf-lib": "^1.17.1"
+  }
+}
